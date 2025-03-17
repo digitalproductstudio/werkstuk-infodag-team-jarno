@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battleship Victory!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #777979;
+            color: white;
+            text-align: center;
+        }
+        .victory-container {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #FF6347;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #E55336;
+        }
+    </style>
+</head>
+<body>
+    <div class="victory-container">
+        <h1 id="winner-message">Player Wins!</h1>
+        <p>Congratulations on your victory at sea!</p>
+        <button onclick="playAgain()">Play Again</button>
+        <a href="index.html"><button>Homescreen </button></a>
+    </div>
+
+    <script>
+        // Get the winner from URL parameters   
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const winner = urlParams.get('winner');
+            document.getElementById('winner-message').textContent = `Player ${winner} Wins!`;
+        };
+
+        function playAgain() {
+            window.location.href = 'app.html';
+        }
+    </script>
+</body>
+</html>
