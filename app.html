@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Battleship with Hand Tracking</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        video, canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; }
+        .grid-container { display: flex; justify-content: space-around; position: absolute; top: 10%; width: 100%; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); gap: 5px; width: 40vmin; height: 40vmin; }
+        .cell { border: 2px solid #333; background-color: #87CEFA; }
+        .hit { background-color: #FF6347; }
+        .miss { background-color: #FFD700; }
+        .ship { background-color: #4682B4; }
+        #question-section { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.8); padding: 10px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <video id="camera" autoplay></video>
+    <canvas id="outputCanvas"></canvas>
+    
+    <div class="grid-container">
+        <div id="player1-board" class="grid"></div>
+        <div id="player2-board" class="grid"></div>
+    </div>
+
+    <div id="question-section">
+        <h2 id="question">Answer this to play your turn:</h2>
+        <input type="text" id="answer" placeholder="Your answer">
+        <button id="submit-answer">Submit</button>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('camera');
+        const canvasElement = document.getElementById('outputCanvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const player1Board = document.getElementById('player1-board');
+        const player2Board = document.getElementById('player2-board');
+        let currentPlayer = 1;
+        let shipsPlaced = [false, false];
+        let questionAnswered = false;
+
+        const questions = [
+            { q: 'What is 5 + 3?', a: '8' },
+            { q: 'What color is the sky?', a: 'blue' }
+        ];
+
+        function createGrid(board) {
+            board.innerHTML = '';
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.index = i;
+                board.appendChild(cell);
+            }
+        }
+
+        createGrid(player1Board);
+        createGrid(player2Board);
+
+        const hands = new Hands({
+            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(results => {
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const isClosedHand = landmarks[8].y > landmarks[4].y;
+
+                if (isClosedHand && !shipsPlaced[currentPlayer - 1]) {
+                    placeShip(currentPlayer);
+                }
+            }
+        });
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({ image: videoElement });
+            },
+            width: 1280,
+            height: 720
+        });
+        camera.start();
+
+        function placeShip(player) {
+            const board = player === 1 ? player1Board : player2Board;
+            const cells = board.querySelectorAll('.cell');
+            cells[0].classList.add('ship');
+            cells[1].classList.add('ship');
+            cells[2].classList.add('ship');
+            shipsPlaced[player - 1] = true;
+            alert(`Player ${player} placed their ship!`);
+        }
+
+        function askQuestion() {
+            const question = questions[Math.floor(Math.random() * questions.length)];
+            document.getElementById('question').innerText = question.q;
+            return question.a;
+        }
+
+        let currentAnswer = askQuestion();
+
+        document.getElementById('submit-answer').addEventListener('click', () => {
+            const answer = document.getElementById('answer').value.trim().toLowerCase();
+            if (answer === currentAnswer.toLowerCase()) {
+                alert('Correct! You can take your turn.');
+                questionAnswered = true;
+            } else {
+                alert('Wrong! Passing turn to the other player.');
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                currentAnswer = askQuestion();
+            }
+        });
+    </script>
+</body>
+</html>

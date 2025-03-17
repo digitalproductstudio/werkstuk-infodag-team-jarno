@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AR Battleship Game</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #4d4d4d 0%, #d2d4d4 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: 'Arial', sans-serif;
+        color: white;
+        overflow: hidden; /* Hide anything that overflows during the transition */
+      }
+
+      .container {
+        text-align: center;
+        padding: 30px;
+        background-color: rgba(0, 0, 0, 0.7);
+        border-radius: 15px;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        width: 80%;
+        max-width: 400px;
+        box-shadow: 10px 10px 15px #000000;
+        z-index: 10; /* Make sure content stays above water */
+      }
+
+      h1 {
+        font-size: 36px;
+        margin-bottom: 20px;
+      }
+
+      p {
+        font-size: 18px;
+        margin: 10px 0;
+      }
+
+      .button {
+        background-color: #cacaca;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 18px;
+        width: 200px;
+        cursor: pointer;
+        margin: 10px;
+        transition: background-color 0.3s;
+      }
+
+      .button:hover {
+        background-color: #777979;
+      }
+
+      .settings {
+        margin-top: 20px;
+      }
+
+      .settings button {
+        background-color: #cacaca;
+      }
+
+      .settings button:hover {
+        background-color: #777979;
+      }
+
+      .instructions {
+        margin-top: 20px;
+        font-size: 16px;
+        color: #ffff00;
+        display: none;
+      }
+
+      .sound-on {
+        background-color: #32cd32 !important;
+      }
+
+      .sound-off {
+        background-color: #ff6347 !important;
+      }
+
+      /* Rainbow animation for the word "wins" */
+      .rainbow-text {
+        font-weight: bold;
+        font-size: 20px;
+        background-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+        background-size: 400% 400%;
+        background-clip: text;
+        color: transparent;
+        animation: rainbow 3s linear infinite;
+      }
+
+      @keyframes rainbow {
+        0% {
+          background-position: 0 0;
+        }
+        50% {
+          background-position: 100% 100%;
+        }
+        100% {
+          background-position: 0 0;
+        }
+      }
+
+      /* Water animation for transition effect */
+      @keyframes waterTransition {
+        0% {
+          top: -100%;
+        }
+        100% {
+          top: 0;
+        }
+      }
+
+      /* Water animation element */
+      .water {
+        position: fixed; /* Fixed positioning to cover the entire screen */
+        top: -100%; /* Start off-screen at the top */
+        left: 0;
+        width: 100%;
+        height: 100vh; /* Take up the entire viewport */
+        background-image: url('water.png'); /* Set water.png as the background image */
+        background-size: cover; /* Make sure the image covers the entire area */
+        background-position: center; /* Center the image */
+        z-index: 9999; /* Ensure it appears above everything else */
+        animation: none; /* No animation initially */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AR Battleship</h1>
+      <p>Get ready to sink your opponent's ships!</p>
+      
+      <!-- Start Button -->
+      <button class="button" onclick="startGame()">Start Game</button>
+
+      <div class="settings">
+        <!-- Sound Toggle Button -->
+        <button id="soundButton" class="button sound-on" onclick="toggleSound()">Sound: On</button>
+        <!-- Instructions Button -->
+        <button class="button" onclick="showInstructions()">Instructions</button>
+      </div>
+
+      <!-- Instructions Text (hidden by default) -->
+      <div id="instructionsText" class="instructions">
+        <p><strong>Instructions:</strong> <br>1. Place your ships. <br>2. Take turns to attack. <br>3. The first to sink all ships <span class="rainbow-text">wins</span>!</p>
+      </div>
+    </div>
+
+    <!-- Water transition element (initially hidden) -->
+    <div id="waterEffect" class="water"></div>
+
+    <script>
+      // Start the game by redirecting to lobby.html with a transition effect
+      function startGame() {
+        const waterEffect = document.getElementById('waterEffect');
+
+        // Add the animation to the water element when the button is clicked
+        waterEffect.style.animation = 'waterTransition 1s forwards'; // Start the water transition
+
+        // After the animation ends (1 second), redirect to lobby.html
+        setTimeout(function() {
+          window.location.href = 'lobby.html'; // Link to the lobby page
+        }, 1000); // Delay the redirect for the duration of the animation
+      }
+
+      // Toggle the sound button between on and off states
+      let soundOn = true;
+      function toggleSound() {
+        soundOn = !soundOn;
+        const soundButton = document.getElementById('soundButton');
+        
+        if (soundOn) {
+          soundButton.classList.remove('sound-off');
+          soundButton.classList.add('sound-on');
+          soundButton.innerText = "Sound: On";
+        } else {
+          soundButton.classList.remove('sound-on');
+          soundButton.classList.add('sound-off');
+          soundButton.innerText = "Sound: Off";
+        }
+      }
+
+      // Show the instructions text when the button is pressed
+      function showInstructions() {
+        const instructionsText = document.getElementById('instructionsText');
+        
+        // Toggle the visibility of the instructions
+        if (instructionsText.style.display === "none" || instructionsText.style.display === "") {
+          instructionsText.style.display = "block";
+        } else {
+          instructionsText.style.display = "none";
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AR Battleship Game</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #4d4d4d 0%, #d2d4d4 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: 'Arial', sans-serif;
+        color: white;
+        position: relative;
+        overflow: hidden; /* Hide overflow during the transition */
+      }
+
+      .container {
+        text-align: center;
+        padding: 30px;
+        background-color: rgba(0, 0, 0, 0.7);
+        border-radius: 15px;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        width: 80%;
+        max-width: 600px;
+        box-shadow: 10px 10px 15px #000000;
+        z-index: 10; /* Ensure the content stays above the water */
+      }
+
+      h1 {
+        font-size: 36px;
+        margin-bottom: 20px;
+      }
+
+      p {
+        font-size: 18px;
+        margin: 10px 0;
+      }
+
+      .button {
+        background-color: #cacaca;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 18px;
+        width: 200px;
+        cursor: pointer;
+        margin: 10px;
+        transition: background-color 0.3s;
+      }
+
+      .button:hover {
+        background-color: #777979;
+      }
+
+      .settings {
+        margin-top: 20px;
+      }
+
+      .settings button {
+        background-color: #cacaca;
+      }
+
+      .settings button:hover {
+        background-color: #777979;
+      }
+
+      .instructions {
+        margin-top: 20px;
+        font-size: 16px;
+        color: #ffff00;
+        display: none;
+      }
+
+      .sound-on {
+        background-color: #32cd32 !important;
+      }
+
+      .sound-off {
+        background-color: #ff6347 !important;
+      }
+
+      /* Rainbow animation for the word "wins" */
+      .rainbow-text {
+        font-weight: bold;
+        font-size: 20px;
+        background-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+        background-size: 400% 400%;
+        background-clip: text;
+        color: transparent;
+        animation: rainbow 15s linear infinite;
+      }
+
+      @keyframes rainbow {
+        0% {
+          background-position: 0 0;
+        }
+        50% {
+          background-position: 100% 100%;
+        }
+        100% {
+          background-position: 0 0;
+        }
+      }
+
+      /* Spinning Dots */
+      .loading-dots {
+        display: inline-block;
+        position: relative;
+        width: 60px;
+        height: 30px;
+      }
+
+      .dot {
+        position: absolute;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: white;
+        animation: bounce 1.2s infinite ease-in-out;
+      }
+
+      .dot:nth-child(1) {
+        left: 0;
+        animation-delay: -0.24s;
+      }
+
+      .dot:nth-child(2) {
+        left: 20px;
+        animation-delay: -0.12s;
+      }
+
+      .dot:nth-child(3) {
+        left: 40px;
+      }
+
+      @keyframes bounce {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      img {
+        width: 10%;
+        display: inline-block;
+      }
+
+      section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .dot {
+        margin-left: 20px;
+      }
+
+      /* Go Back Button Styling */
+      .go-back {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background-color: red;
+        color: white;
+        border: none;
+        padding: 15px 20px;
+        font-size: 18px;
+        cursor: pointer;
+        border-radius: 12px;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        transition: background-color 0.3s;
+      }
+
+      .go-back:hover {
+        background-color: darkred;
+      }
+
+      /* Water transition animation */
+      @keyframes waterTransition {
+        0% {
+          top: 50%; /* Start at the middle of the screen */
+          transform: translateY(-50%); /* Center it vertically */
+        }
+        100% {
+          top: -100%; /* Move upwards to be completely out of the screen */
+        }
+      }
+
+      /* Water element covering the page */
+      .water {
+        position: fixed; /* Fixed position to cover the entire screen */
+        top: 50%; /* Initially at the center of the screen */
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-image: url('water.png'); /* Water image */
+        background-size: cover; /* Cover the entire viewport */
+        background-position: center; /* Center the image */
+        z-index: 9999; /* Ensure it appears above everything else */
+        animation: waterTransition 1.5s forwards; /* Animation for transition */
+      }
+
+      /* New button style */
+      .go-to-app {
+        background-color: #cacaca;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 18px;
+        width: 200px;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: background-color 0.3s;
+      }
+
+      .go-to-app:hover {
+        background-color: #777979;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Water element that will move upwards to reveal content -->
+    <div class="water"></div>
+
+    <div class="container">
+        <section>
+            <h1>Waiting for other player</h1>
+          <!-- Loading Dots -->
+          <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+          </section>
+      <section>
+        <p>You are</p>
+        <img src="p1_tr.png" alt="AR Battleship" />
+      </section>
+
+      <!-- New Go to App Button -->
+      <button class="go-to-app" onclick="goToApp()">Go to Game</button>
+    </div>
+
+    <!-- Go Back Button -->
+    <button class="go-back" onclick="goBack()">Go Back</button>
+
+    <script>
+      // Go back to the previous page (index.html)
+      function goBack() {
+        window.location.href = 'index.html';
+      }
+
+      // Redirect to app.html when clicking the new button
+      function goToApp() {
+        window.location.href = 'app.html'; // Change to your game page
+      }
+
+      // Toggle the sound button between on and off states
+      let soundOn = true;
+      function toggleSound() {
+        soundOn = !soundOn;
+        const soundButton = document.getElementById('soundButton');
+        
+        if (soundOn) {
+          soundButton.classList.remove('sound-off');
+          soundButton.classList.add('sound-on');
+          soundButton.innerText = "Sound: On";
+        } else {
+          soundButton.classList.remove('sound-on');
+          soundButton.classList.add('sound-off');
+          soundButton.innerText = "Sound: Off";
+        }
+      }
+
+      // Show the instructions text when the button is pressed
+      function showInstructions() {
+        const instructionsText = document.getElementById('instructionsText');
+        
+        // Toggle the visibility of the instructions
+        if (instructionsText.style.display === "none" || instructionsText.style.display === "") {
+          instructionsText.style.display = "block";
+        } else {
+          instructionsText.style.display = "none";
+        }
+      }
+      
+    </script>
+  </body>
+</html>
